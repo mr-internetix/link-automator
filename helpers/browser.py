@@ -8,6 +8,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium import webdriver
 import random
 from dotenv import load_dotenv
+import pandas as pd
 load_dotenv()
 
 # random imports for testing
@@ -55,6 +56,23 @@ class Browser():
         except Exception as e:
             return "something went wrong"
 
+    def find_question_excel(self, question_text):
+        ''' Return options of the Question if Question Exists in Excel '''
+        df = pd.read_excel("./excel_config.xlsx")
+
+        for index, question in enumerate(df.Question):
+            if question.lower().find(question_text.lower()) != -1:
+                return df["Options"][index]
+
+        return False
+
+    def manage_provider(self):
+        ''' Checks the provider and calls the respective functions'''
+        if self.find_provider() == "cortex":
+            self.manage_cortex()
+        elif self.find_provider() == "main_script":
+            self.manage_main()
+
     def manage_cortex(self):
 
         # Accept the conditions
@@ -62,32 +80,61 @@ class Browser():
             (By.XPATH, "//a/span[contains(text(), 'Accept and take the survey')]"))).click()
 
         # check for are you question
+        while True:
+            if self.find_provider() == "cortex":
+                # getting question text
+                question_text = WebDriverWait(self.driver, 10).until(
+                    EC.presence_of_element_located((By.TAG_NAME, "h3"))).text
 
-        gender_text = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.TAG_NAME, "h3"))).text
+                question_value = self.find_question_excel(question_text)
 
-        if gender_text.lower().find("are you") != -1:
+                if question_value != False:
+                    # punch according to data
 
-            # selecting random gender question
+                    WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
+                        (By.XPATH, f'//input[@type="radio"][@data-test-id="_{question_value}"]'))).click()
 
-            # WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located(
-            #     (By.XPATH, f'//input[@type="radio"][@data-test-id="_{random.randint(1,4)}"]')))[0].click()
+                    # clicking on submit
 
-            WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located(
-                (By.XPATH, f'//input[@type="radio"][@data-test-id="_2"]')))[0].click()
+                    WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
+                        (By.XPATH, '//a[@data-test-id="submitButton"]'))).click()
 
-            # clicking on submit
+                    #  sleeping for 10 seconds
+                    sleep(10)
 
-            WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
-                (By.XPATH, '//a[@data-test-id="submitButton"]'))).click()
+                else:
 
-    def manage_provider(self):
-        if self.find_provider() == "cortex":
-            self.manage_cortex()
-        elif self.find_provider() == "main_script":
-            self.manage_main_script()
+                    # we dont have question punching randomly
+                    print("we dont have question punching randomly")
 
-    def manage_main_script(self):
+                    # finding_random_count
+                    count = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located(
+                        (By.XPATH, f'//input[@type="radio"]')))
+
+                    # selecting random option question
+                    WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
+                        (By.XPATH, f'//input[@type="radio"][@data-test-id="_{random.randint(1,len(count))}"]'))).click()
+
+                    # clicking on submit
+
+                    WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
+                        (By.XPATH, '//a[@data-test-id="submitButton"]'))).click()
+
+                    #  sleeping for 10 seconds
+                    sleep(10)
+            else:
+                self.manage_provider()
+
+    def manage_main(self):
+        #  main frame
+
+        main_frame = WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.ID, "mainFrame")))
+        # switching to main frame
+
+        self.driver.switch_to.frame(main_frame)
+
+        # driver.switchTo().frame(iframe);
         # click on next button
         WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
             (By.XPATH, '//input[@class="mrNext"][@value="Next"]'))).click()
