@@ -21,8 +21,7 @@ def find_question_excel(question_text):
 def check_for_inputs():
     ''' Returns input available on the page '''
 
-    inputs = self.driver.execute_script(''' 
-
+    inputs = driver.execute_script(''' 
     
     ''')
 

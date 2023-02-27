@@ -2,6 +2,7 @@
 from time import sleep
 from helpers.browser_config import BrowserConfig
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -66,6 +67,66 @@ class Browser():
 
         return False
 
+    def check_question_type_cortex(self):
+        question_type = self.driver.execute_script(''' 
+        
+                const checkForInputs = () => {
+                    const inputs = ["select", "radio", "text"];
+                    select_tags = document.getElementsByTagName("select");
+                    single_select = document.querySelectorAll("input.mrSingle"); // this is for web script question
+                    text_box = document.querySelectorAll("input.mrEdit"); //this for web script question
+                    cortex_radio = document.querySelectorAll(".radio");
+                    cortex_text = document.querySelectorAll("input[type='text']");
+
+                    if (select_tags.length > 0) {
+                        return "select"
+                    } else if (single_select.length > 0 || cortex_radio.length > 0) {
+                        return "single_select"
+                    } else if (text_box.length == 1 || cortex_text.length > 0) {
+                        return "text_box"
+                    }
+                    };
+
+                    return checkForInputs()
+
+        
+        ''')
+        return question_type
+
+    def punch_random_select(self):
+        # display element on screen
+        self.driver.execute_script('''
+                                                function display_select() {
+                            select_tags = document.getElementsByTagName("select");
+
+                            Array.from(select_tags).forEach((element) => {
+                                element.style.display = "block";
+                            });
+                            }
+
+                          display_select()
+                           
+                             ''')
+
+        sleep(5)
+
+        all_select = (WebDriverWait(self.driver, 10).until(
+            EC.presence_of_all_elements_located((By.TAG_NAME, "select"))))
+
+        for select in all_select:
+            current_select = Select(select)
+            random_value = random.randint(
+                7 if 13 == len(current_select.options) else 23, 30 if 15 < len(current_select.options)else len(current_select.options)-1)
+            current_select.select_by_index(random_value)
+
+         # clicking on submit
+
+        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
+            (By.XPATH, '//a[@data-test-id="submitButton"]'))).click()
+
+        # sleeping for 10 secs
+        sleep(10)
+
     def manage_provider(self):
         ''' Checks the provider and calls the respective functions'''
         if self.find_provider() == "cortex":
@@ -88,19 +149,63 @@ class Browser():
 
                 question_value = self.find_question_excel(question_text)
 
+                question_type = self.check_question_type_cortex()
+
+                print(question_type, question_text)
+
                 if question_value != False:
-                    # punch according to data
 
-                    WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
-                        (By.XPATH, f'//input[@type="radio"][@data-test-id="_{question_value}"]'))).click()
+                    if question_type == "select":
 
-                    # clicking on submit
+                        print("select block")
 
-                    WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
-                        (By.XPATH, '//a[@data-test-id="submitButton"]'))).click()
+                        self.punch_random_select()
 
-                    #  sleeping for 10 seconds
-                    sleep(10)
+                        # punch according to data
+                    elif question_type == "single_select":
+
+                        print("single_select block")
+
+                        # sleep(10000)
+
+                        # WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
+                        #     (By.XPATH, f'//input[@type="radio"][@data-test-id="_{question_value}"]'))).click()
+
+                        WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located(
+                            (By.XPATH, f'//input[@type="radio"]')))[question_value-1].click()
+
+                        # clicking on submit
+
+                        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
+                            (By.XPATH, '//a[@data-test-id="submitButton"]'))).click()
+
+                        #  sleeping for 10 seconds
+                        sleep(10)
+
+                    elif question_type == "text_box":
+                        print("text Box question")
+
+                        text_boxes = WebDriverWait(self.driver, 10).until(
+                            EC.presence_of_all_elements_located((By.XPATH, '//input[@type="text"]')))
+                        for textbox in text_boxes:
+                            textbox.send_keys(str(question_value))
+
+                        # clicking on submit
+
+                        sleep(3)
+
+                        try:
+
+                            WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
+                                (By.XPATH, '//a[@data-test-id="submitButton"]'))).click()
+
+                            WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
+                                (By.XPATH, '//a[@data-test-id="submitButton"]'))).click()
+                        except Exception as e:
+                            pass
+
+                        #  sleeping for 10 seconds
+                        sleep(10)
 
                 else:
 

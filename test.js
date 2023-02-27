@@ -41,3 +41,11 @@ const checkForInputsInScript = () => {
     next_button.click();
   }
 };
+
+function display_select() {
+  select_tags = document.getElementsByTagName("select");
+
+  Array.from(select_tags).forEach((element) => {
+    element.style.display = "block!important";
+  });
+}

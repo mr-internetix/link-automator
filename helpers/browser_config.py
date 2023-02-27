@@ -14,7 +14,7 @@ class BrowserConfig(Enum):
 
 class Links(Enum):
     ''' Links for tesing'''
-    cortex = "https://enter.ipsosinteractive.com/landing/?rType=0&id=&ci=en-us&pid=S23007177&redirectStage=1&routerID=78&supplierID=1090&surveyid=882325&testCortex=1"
+    cortex = "https://enter.ipsosinteractive.com/landing/?rType=0&id=&ci=en-us&pid=S23007166&redirectStage=1&routerID=78&supplierID=1090&surveyid=882107&testCortex=1"
     main_script = "https://staging01.ipsosinteractive.com/surveys/25b6acb2-de68-11e2-a28f-0800200c9a66"
 
 
