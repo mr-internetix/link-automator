@@ -67,16 +67,111 @@ class Browser():
 
         return False
 
+    def switch_to_main_frame(self):
+        ''' switches to main frame'''
+        #  main frame
+        try:
+            main_frame = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.ID, "mainFrame")))
+            # switching to main frame
+            self.driver.switch_to.frame(main_frame)
+        except Exception as e:
+            pass
+
+    def check_question_type_main(self):
+        main_question_type = self.driver.execute_script('''
+
+            const checkForInputsInScript = () => {
+                select_tags = document.querySelectorAll("select.mrDropdown");
+                single_select = document.querySelectorAll(".mrSingle");
+                text_box = document.querySelectorAll(".mrEdit");
+                next_button = document.querySelector("input[class='mrNext']");
+                multi_select = document.querySelectorAll(".mrMultiple");
+                all_labels = document.querySelectorAll("label")
+                grid_question = document.querySelectorAll(".mrGridCategoryText.mrGridQuestionText")
+
+                if(grid_question.length > 0){
+                
+                    grid_question.forEach((elem)=>{
+                        
+                    if(elem.hasAttribute("disabled")){
+                        return "null"
+                    }
+
+                    })
+
+                    return "grid_question"
+                
+                }
+                else if (single_select.length > 0) {
+                    
+                    single_select.forEach((elem) =>{
+                        if(elem.hasAttribute("checked")){
+                            console.log("single_already_selected")
+                            return "null"
+                        }
+                    })
+
+                    all_labels.forEach((elem) => {
+                        if(elem.classList.contains("cellCheckedBackground")){
+                            console.log("already selected")
+                            return "null"
+                        }
+                    })
+
+                    return "single_select";
+
+                } else if (text_box.length > 0) {
+
+                    text_box.forEach((elem)=>{
+
+                        if(elem.hasAttribute("disabled")){
+
+                            console.log("disabled")
+                            return "null"
+
+                        }
+                    })
+                
+                    return "text_box";
+                } else if (select_tags.length > 0) {
+                    return "select_tag";
+                }else if (multi_select.length > 0){
+
+                    multi_select.forEach((elem)=>{
+
+                        if(elem.hasAttribute("disabled")){
+                            console.log("disabled")
+                            return "null"
+
+                        }
+                    })
+                    
+                    return "multi_select"
+                }
+                else {
+                    return "null";
+                }
+
+            };
+
+        return checkForInputsInScript()
+
+        ''')
+
+        return main_question_type
+
     def check_question_type_cortex(self):
-        question_type = self.driver.execute_script(''' 
-        
+        question_type = self.driver.execute_script('''
+
                 const checkForInputs = () => {
                     const inputs = ["select", "radio", "text"];
                     select_tags = document.getElementsByTagName("select");
                     single_select = document.querySelectorAll("input.mrSingle"); // this is for web script question
                     text_box = document.querySelectorAll("input.mrEdit"); //this for web script question
                     cortex_radio = document.querySelectorAll(".radio");
-                    cortex_text = document.querySelectorAll("input[type='text']");
+                    cortex_text = document.querySelectorAll(
+                        "input[type='text']");
 
                     if (select_tags.length > 0) {
                         return "select"
@@ -89,15 +184,16 @@ class Browser():
 
                     return checkForInputs()
 
-        
+
         ''')
         return question_type
 
     def punch_random_select(self):
         # display element on screen
         self.driver.execute_script('''
-                                                function display_select() {
-                            select_tags = document.getElementsByTagName("select");
+                function display_select() {
+                            select_tags = document.getElementsByTagName(
+                                "select");
 
                             Array.from(select_tags).forEach((element) => {
                                 element.style.display = "block";
@@ -105,7 +201,7 @@ class Browser():
                             }
 
                           display_select()
-                           
+
                              ''')
 
         sleep(5)
@@ -115,14 +211,24 @@ class Browser():
 
         for select in all_select:
             current_select = Select(select)
-            random_value = random.randint(
-                7 if 13 == len(current_select.options) else 23, 30 if 15 < len(current_select.options)else len(current_select.options)-1)
-            current_select.select_by_index(random_value)
+            try:
+                random_value = random.randint(
+                    7 if 13 == len(current_select.options) else 23, 30 if 15 < len(current_select.options) else len(current_select.options)-1)
+                current_select.select_by_index(random_value)
+            except Exception as e:
+                pass
 
-         # clicking on submit
+        # clicking on submit
+        if self.find_provider() == "cortex":
+            WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
+                (By.XPATH, '//a[@data-test-id="submitButton"]'))).click()
+        else:
+            print("i am in main_script")
+            self.switch_to_main_frame()
 
-        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
-            (By.XPATH, '//a[@data-test-id="submitButton"]'))).click()
+            # click on next
+            WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
+                (By.XPATH, '//input[@class="mrNext"][@value="Next"]'))).click()
 
         # sleeping for 10 secs
         sleep(10)
@@ -151,20 +257,14 @@ class Browser():
 
                 question_type = self.check_question_type_cortex()
 
-                print(question_type, question_text)
-
                 if question_value != False:
 
                     if question_type == "select":
-
-                        print("select block")
 
                         self.punch_random_select()
 
                         # punch according to data
                     elif question_type == "single_select":
-
-                        print("single_select block")
 
                         # sleep(10000)
 
@@ -173,6 +273,53 @@ class Browser():
 
                         WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located(
                             (By.XPATH, f'//input[@type="radio"]')))[question_value-1].click()
+
+                        # clicking on submit
+
+                        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
+                            (By.XPATH, '//a[@data-test-id="submitButton"]'))).click()
+
+                        #  sleeping for 10 seconds
+                        sleep(10)
+
+                    elif question_type == "text_box":
+
+                        text_boxes = WebDriverWait(self.driver, 10).until(
+                            EC.presence_of_all_elements_located((By.XPATH, '//input[@type="text"]')))
+                        for textbox in text_boxes:
+                            textbox.send_keys(str(question_value))
+
+                        # clicking on submit
+
+                        sleep(3)
+
+                        try:
+
+                            WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
+                                (By.XPATH, '//a[@data-test-id="submitButton"]'))).click()
+
+                            WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
+                                (By.XPATH, '//a[@data-test-id="submitButton"]'))).click()
+                        except Exception as e:
+                            pass
+
+                        #  sleeping for 10 seconds
+                        sleep(10)
+
+                else:
+
+                    if question_text == "single_select":
+
+                        # we dont have question punching randomly
+                        print("we dont have question punching randomly")
+
+                        # finding_random_count
+                        count = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located(
+                            (By.XPATH, f'//input[@type="radio"]')))
+
+                        # selecting random option question
+                        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
+                            (By.XPATH, f'//input[@type="radio"][@data-test-id="_{random.randint(1,len(count))}"]'))).click()
 
                         # clicking on submit
 
@@ -207,42 +354,151 @@ class Browser():
                         #  sleeping for 10 seconds
                         sleep(10)
 
-                else:
+                    elif question_type == "select":
 
-                    # we dont have question punching randomly
-                    print("we dont have question punching randomly")
+                        print("select block")
 
-                    # finding_random_count
-                    count = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located(
-                        (By.XPATH, f'//input[@type="radio"]')))
+                        self.punch_random_select()
 
-                    # selecting random option question
-                    WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
-                        (By.XPATH, f'//input[@type="radio"][@data-test-id="_{random.randint(1,len(count))}"]'))).click()
+            else:
 
-                    # clicking on submit
-
+                try:
                     WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
                         (By.XPATH, '//a[@data-test-id="submitButton"]'))).click()
-
-                    #  sleeping for 10 seconds
-                    sleep(10)
-            else:
-                self.manage_provider()
+                except Exception as e:
+                    # switching frame
+                    self.switch_to_main_frame()
+                    WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
+                        (By.XPATH, '//input[@class="mrNext"][@value="Next"]'))).click()
+                finally:
+                    self.manage_provider()
 
     def manage_main(self):
-        #  main frame
 
-        main_frame = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.ID, "mainFrame")))
-        # switching to main frame
+        # Switch to main_frame
+        self.switch_to_main_frame()
 
-        self.driver.switch_to.frame(main_frame)
+        # looping through questions
+        while True:
 
-        # driver.switchTo().frame(iframe);
-        # click on next button
-        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
-            (By.XPATH, '//input[@class="mrNext"][@value="Next"]'))).click()
+            question_text = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CLASS_NAME, f"mrQuestionText"))).text
+            question_value = self.find_question_excel(question_text)
+            sleep(3)
+            question_type = self.check_question_type_main()
+            print(question_type)
+
+            if question_type == "single_select":
+
+                try:
+                    single_select_count = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located(
+                        (By.XPATH, f'//input[@type="radio"]')))
+
+                    # slecting random single select
+                    single_select_count[random.randint(
+                        0, len(single_select_count)-1)].click()
+                except Exception as e:
+                    pass
+
+                finally:
+
+                    # selecting if question exits in excel
+                    # single_select_count[question_value-1].click()
+
+                    # clicking on submit
+                    try:
+                        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
+                            (By.XPATH, '//input[@class="mrNext"][@value="Next"]'))).click()
+                    except Exception as e:
+                        pass
+
+                #  sleeping for 10 seconds
+                sleep(10)
+
+            elif question_type == "select_tag":
+
+                try:
+                    self.punch_random_select()
+                except Exception as e:
+                    pass
+
+            elif question_type == "multi_select":
+                try:
+
+                    multi_text = WebDriverWait(self.driver, 10).until(
+                        EC.visibility_of_all_elements_located((By.CLASS_NAME, 'mrMultipleText')))
+
+                    sleep(2)
+
+                    multi_text[random.randint(
+                        0, len(multi_text)-1)].click()
+
+                    WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
+                        (By.XPATH, '//input[@class="mrNext"][@value="Next"]'))).click()
+
+                except Exception as e:
+                    pass
+
+            elif question_type == "text_box":
+
+                try:
+                    text_boxes = WebDriverWait(self.driver, 10).until(
+                        EC.presence_of_all_elements_located((By.XPATH, '//input[@class="mrEdit"]')))
+
+                    print("textboxes", len(text_boxes))
+                    for textbox in text_boxes:
+                        textbox.send_keys("71601")
+                        break
+                except Exception as e:
+                    pass
+                finally:
+                    # clicking on submit
+                    sleep(3)
+                    try:
+                        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
+                            (By.XPATH, '//input[@class="mrNext"][@value="Next"]'))).click()
+                        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
+                            (By.XPATH, '//input[@class="mrNext"][@value="Next"]'))).click()
+                    except Exception as e:
+                        pass
+
+                #  sleeping for 10 seconds
+                sleep(10)
+
+            elif question_type == "grid_question":
+                print("main agagaya gird mein")
+
+                try:
+                    grid_options = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located(
+                        (By.CSS_SELECTOR, '.mrGridCategoryText.mrGridQuestionText')))
+
+                    print(f'grid_options: {len(grid_options)}')
+
+                    total_grid_question = WebDriverWait(self.driver, 10).until(
+                        EC.presence_of_all_elements_located((By.CLASS_NAME, "prog-progress-bar-item")))
+
+                    print(f'total_grid_options: {len(total_grid_question)}')
+
+                    for question in total_grid_question:
+                        grid_options[random.randint(
+                            0, len(grid_options)-1)].click()
+
+                        sleep(3)
+
+                     # click on next button
+                    WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
+                        (By.XPATH, '//input[@class="mrNext"][@value="Next"]'))).click()
+
+                except Exception as e:
+                    print(e)
+
+            elif question_type == "null":
+                # click on next button
+                WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
+                    (By.XPATH, '//input[@class="mrNext"][@value="Next"]'))).click()
+            else:
+                WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
+                    (By.XPATH, '//input[@class="mrNext"][@value="Next"]'))).click()
 
 
 if __name__ == "__main__":

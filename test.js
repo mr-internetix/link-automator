@@ -24,21 +24,19 @@ const checkForInputs = () => {
 
 const checkForInputsInScript = () => {
   select_tags = document.querySelectorAll("select.mrDropdown");
-  single_select = document.querySelectorAll("input.mrSingle"); // this is for web script question
-  text_box = document.querySelectorAll("input.mrEdit"); //this for web script question
+  single_select = document.querySelectorAll("input.mrSingle");
+  text_box = document.querySelectorAll("input.mrEdit");
   next_button = document.querySelector("input[class='mrNext']");
   multi_select = document.querySelectorAll("input.mrMultiple");
 
   if (single_select.length > 0) {
-    alert("this is a single select question");
+    return "single_select";
   } else if (text_box.length > 0) {
-    alert("this is a textbox question");
+    return "text_box";
   } else if (select_tags.length > 0) {
-    document.getElementsByTagName("select")[0].options[25].selected = true;
-    document.getElementsByTagName("select")[1].options[10].selected = true;
-    alert("this is a select question");
+    return "select_tag";
   } else {
-    next_button.click();
+    return "null";
   }
 };
 
@@ -49,3 +47,6 @@ function display_select() {
     element.style.display = "block!important";
   });
 }
+
+// selector for grid question text
+// document.querySelectorAll(".mrGridCategoryText.mrGridQuestionText") => returns options of the grid text
