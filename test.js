@@ -48,5 +48,10 @@ function display_select() {
   });
 }
 
+function showAllOptions() {
+  all_plus = document.querySelectorAll(".mrShowText");
+
+  all_plus.forEach((elem) => elem.click());
+}
 // selector for grid question text
 // document.querySelectorAll(".mrGridCategoryText.mrGridQuestionText") => returns options of the grid text
