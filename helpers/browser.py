@@ -1,4 +1,8 @@
 # Imports
+from helpers.cortex import Cortex
+from helpers.helper_functions import Helpers
+from helpers.main_script import MainScript
+import openpyxl
 from time import sleep
 from helpers.browser_config import BrowserConfig
 from selenium.webdriver.common.keys import Keys
@@ -16,7 +20,7 @@ load_dotenv()
 # random imports for testing
 
 
-class Browser():
+class Browser(Cortex, Helpers, MainScript):
     '''  Contains All The methods regarding to borwser action '''
 
     def __init__(self) -> None:
@@ -58,233 +62,6 @@ class Browser():
         except Exception as e:
             return "something went wrong"
 
-    def find_question_excel(self, question_text):
-        ''' Return options of the Question if Question Exists in Excel '''
-        # df = pd.read_excel("./excel_config.xlsx")
-
-        # for index, question in enumerate(df.Question):
-        #     if question.lower().find(question_text.lower()) != -1:
-        #         return df["Options"][index]
-
-        # return False
-        try:
-            df = pd.read_excel("./excel_config.xlsx")
-            for index, question in enumerate(df.Question):
-                try:
-                    if (fuzz.ratio(question_text, question)) > 90:
-                        if "[" in df["Options"][index]:
-                            converted_list = df["Options"][index].strip(
-                                '][').split(',')
-                            return converted_list
-                        else:
-                            return df["Options"][index]
-                except Exception as e:
-                    return df["Options"][index]
-
-        except Exception as e:
-            print(e)
-
-    def press_main_next(self):
-        try:
-            WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
-                (By.XPATH, '//input[@class="mrNext"][@value="Next"]'))).click()
-        except Exception as e:
-            pass
-
-    def press_cortex_next(self):
-        try:
-            WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
-                (By.XPATH, '//a[@data-test-id="submitButton"]'))).click()
-        except Exception as e:
-            pass
-
-    def manage_main_single_select(self, question_value):
-
-        try:
-            # showing all options in needed
-            self.showAllOptions()
-
-            # single select count
-            single_select_count = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located(
-                (By.XPATH, f'//input[@type="radio"]')))
-
-            single_select_count[question_value-1].click() if question_value != False else single_select_count[random.randint(
-                0, len(single_select_count)-1)].click()
-
-        except Exception as e:
-            pass
-
-        finally:
-            self.press_main_next()
-
-    def manage_cortex_single_select(self, question_value):
-
-        try:
-            # showing all options needed
-            self.showAllOptions()
-
-            single_select_count = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located(
-                (By.XPATH, f'//input[@type="radio"]')))
-
-            single_select_count[question_value-1].click(
-            ) if question_value != False else single_select_count[random.randint(0, len(single_select_count)-1)].click()
-
-            # selecting random option question
-            #  WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
-            #             (By.XPATH, f'//input[@type="radio"][@data-test-id="_{random.randint(1,len(count))}"]'))).click()
-
-        except Exception as e:
-            print(question_value)
-            print(e)
-
-        finally:
-            # clicking on submit
-            self.press_cortex_next()
-
-    def manage_cortex_multi_select(self, question_value):
-
-        try:
-            # showing all options in need
-            self.showAllOptions()
-
-            # managing multi_select
-            multi_select_count = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located(
-                (By.CLASS_NAME, "multipleChoice-checkbox")))
-
-            multi_select_count[question_value-1].click(
-            ) if question_value != False else multi_select_count[random.randint(0, len(multi_select_count)-1)].click()
-
-        except Exception as e:
-            pass
-
-        finally:
-            self.press_cortex_next()
-
-    def manage_cortex_slider(self, question_value):
-
-        try:
-            # show all options in need
-            self.showAllOptions()
-
-            # managing cortex
-
-            self.driver.execute_script('''
-                cortex_slider = document.querySelectorAll(
-                    ".slider-handle.max-slider-handle.round.hide")
-                cortex_slider.forEach(elem => elem.click())
-            ''')
-
-        except Exception as e:
-            pass
-
-        finally:
-            self.press_cortex_next()
-
-    def manage_cortex_text_box(self, question_value):
-
-        try:
-            text_boxes = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_all_elements_located((By.XPATH, '//input[@type="text"]')))
-            for textbox in text_boxes:
-                textbox.send_keys(question_value)
-        except Exception as e:
-            print(e)
-        finally:
-            self.press_cortex_next()
-            self.press_cortex_next()
-
-    def manage_main_multi(self, question_value):
-        try:
-
-            # showing all options in need
-            self.showAllOptions()
-
-            multi_text = WebDriverWait(self.driver, 10).until(
-                EC.visibility_of_all_elements_located((By.CLASS_NAME, 'mrMultipleText')))
-
-            sleep(2)
-
-            multi_text[random.randint(
-                0, len(multi_text)-1)].click()
-
-        except Exception as e:
-            pass
-
-        finally:
-            self.press_main_next()
-
-    def manage_main_text_box(self, question_value):
-        try:
-            text_boxes = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_all_elements_located((By.XPATH, '//input[@class="mrEdit"]')))
-
-            for textbox in text_boxes:
-                if textbox.isEnabled():
-                    textbox.send_keys(question_value) if question_value != False else textbox.send_keys(
-                        self.generate_random_number(textbox.getAttribute("maxlength")))
-        except Exception as e:
-            pass
-        finally:
-            # clicking on submit
-            sleep(3)
-            try:
-                self.press_main_next()
-                self.press_main_next()
-            except Exception as e:
-                pass
-
-    def generate_random_number(n):
-        """
-        Generates a random n-digit number.
-        """
-        start_range = 10**(n-1)  # Smallest n-digit number
-        end_range = (10**n)-1   # Largest n-digit number
-        return random.randint(start_range, end_range)
-
-    def manage_main_grid_question(self, question_value):
-        try:
-            grid_options = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located(
-                (By.CSS_SELECTOR, '.mrGridCategoryText.mrGridQuestionText')))
-
-            print(f'grid_options: {len(grid_options)}')
-
-            total_grid_question = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_all_elements_located((By.CLASS_NAME, "prog-progress-bar-item")))
-
-            print(f'total_grid_options: {len(total_grid_question)}')
-
-            for question in total_grid_question:
-                grid_options[random.randint(
-                    0, len(grid_options)-1)].click()
-
-                sleep(4)
-            # click on next button
-        except Exception as e:
-            print(e)
-        finally:
-            self.press_main_next()
-
-    def manage_main_slider(self, question_value):
-        try:
-
-            total_questions = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_all_elements_located((By.CLASS_NAME, "prog-progress-bar-item")))
-
-            for question in total_questions:
-
-                WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(
-                    (By.CLASS_NAME, "slider-add-arrow"))).click()
-
-                self.driver.execute_script('''
-                    document.querySelector(".prog-control-next").click()
-
-                    ''')
-                sleep(3)
-        except Exception as e:
-            pass
-        finally:
-            self.press_main_next()
-
     def switch_to_main_frame(self):
         ''' switches to main frame'''
         #  main frame
@@ -295,158 +72,6 @@ class Browser():
             self.driver.switch_to.frame(main_frame)
         except Exception as e:
             pass
-
-    def showAllOptions(self):
-        self.driver.execute_script('''
-            function showAllOptions() {
-        all_plus = document.querySelectorAll(".mrShowText");
-
-        all_plus.forEach((elem) => elem.click());
-        }
-
-        showAllOptions()
-
-        ''')
-
-    def check_question_type_main(self):
-        main_question_type = self.driver.execute_script('''
-
-            const checkForInputsInScript = () => {
-                select_tags = document.querySelectorAll("select.mrDropdown");
-                single_select = document.querySelectorAll(".mrSingle");
-                text_box = document.querySelectorAll(".mrEdit");
-                next_button = document.querySelector("input[class='mrNext']");
-                multi_select = document.querySelectorAll(".mrMultiple");
-                all_labels = document.querySelectorAll("label")
-                grid_question = document.querySelectorAll(
-                    ".mrGridCategoryText.mrGridQuestionText")
-
-                slider_question = document.getElementsByClassName("slider")
-
-                if(slider_question.length > 0 ){
-
-                    slider_mover = document.querySelector(".slider-add-arrow")
-
-                    if(slider_mover.classList.contains("hidden-arrow")){
-                        slider_mover.classList.remove("hidden-arrow")
-                    }
-
-
-                    return "slider"
-
-
-                }
-
-                else if(grid_question.length > 0){
-
-                    grid_question.forEach((elem)=>{
-
-                    if(elem.hasAttribute("disabled")){
-                        return "null"
-                    }
-
-                    })
-
-                    return "grid_question"
-
-                }
-                else if (single_select.length > 0) {
-
-                    single_select.forEach((elem) =>{
-                        if(elem.hasAttribute("checked")){
-                            console.log("single_already_selected")
-                            return "null"
-                        }
-                    })
-
-                    all_labels.forEach((elem) => {
-                        if(elem.classList.contains("cellCheckedBackground")){
-                            console.log("already selected")
-                            return "null"
-                        }
-                    })
-
-                    return "single_select";
-
-                } else if (text_box.length > 0) {
-
-                    text_box.forEach((elem)=>{
-
-                        if(elem.hasAttribute("disabled")){
-
-                            console.log("disabled")
-                            return "null"
-
-                        }
-                    })
-
-                    return "text_box";
-                } else if (select_tags.length > 0) {
-                    return "select_tag";
-                }else if (multi_select.length > 0){
-
-                    multi_select.forEach((elem)=>{
-
-                        if(elem.hasAttribute("disabled")){
-                            console.log("disabled")
-                            return "null"
-
-                        }
-                    })
-
-                    return "multi_select"
-                }
-                else {
-                    return "null";
-                }
-
-            };
-
-        return checkForInputsInScript()
-
-        ''')
-
-        return main_question_type
-
-    def check_question_type_cortex(self):
-        question_type = self.driver.execute_script('''
-
-                const checkForInputs = () => {
-                    const inputs = ["select", "radio", "text"];
-                    select_tags = document.getElementsByTagName("select");
-                    single_select = document.querySelectorAll("input.mrSingle"); // this is for web script question
-                    text_box = document.querySelectorAll("input.mrEdit"); //this for web script question
-                    cortex_radio = document.querySelectorAll(".radio");
-                    cortex_text = document.querySelectorAll(
-                        "input[type='text']");
-
-                    cortex_slider = document.querySelectorAll(
-                        ".slider-handle.max-slider-handle.round.hide")
-                    cortex_multi = document.querySelectorAll(
-                        ".multipleChoice-checkbox")
-
-                    if (cortex_slider.length > 0){
-                        return "cortex_slider"
-
-                    }
-                    else if (cortex_multi.length > 0 ){
-
-                        return "multi_select"
-                    }
-                    else if (select_tags.length > 0) {
-                        return "select"
-                    } else if (single_select.length > 0 || cortex_radio.length > 0) {
-                        return "single_select"
-                    } else if (text_box.length == 1 || cortex_text.length > 0) {
-                        return "text_box"
-                    }
-                    };
-
-                    return checkForInputs()
-
-
-        ''')
-        return question_type
 
     def manage_random_select(self, question_value):
         # display element on screen
@@ -494,6 +119,8 @@ class Browser():
             self.manage_main()
 
     def manage_cortex(self):
+
+        self.cortex_method()
 
         # Accept the conditions
         WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(
@@ -587,8 +214,6 @@ class Browser():
             question_value = self.find_question_excel(question_text)
             sleep(3)
             question_type = self.check_question_type_main()
-            print(question_text, question_value)
-            print(question_type)
 
             if question_type == "single_select":
 
