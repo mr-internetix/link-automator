@@ -1,6 +1,6 @@
 from helpers.browser import Browser
 from time import sleep
-from helpers.browser_config import Links  # => cortex , main_script
+from helpers.browser_config import Links
 
 
 my_browser = Browser()

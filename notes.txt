@@ -1,0 +1,25 @@
+Iframe contains main => survey => id = mainFrame
+mainFrame has => mrform form which has main data => mrForm 
+
+
+mrForm > div#content > .question-container
+
+.mrQuestionText => contains Question Text 
+question-controls-container > contains options 
+
+for next button we have button with class => mrNext
+
+
+
+.mrEdit => for textbox
+
+
+select_tags = wait.until(
+        EC.presence_of_all_elements_located((By.CSS_SELECTOR, "select.mrDropdown")))
+    single_select = driver.find_elements(By.CSS_SELECTOR, ".mrSingle")
+    text_box = driver.find_elements(By.CSS_SELECTOR, ".mrEdit")
+    next_button = driver.find_element(By.CSS_SELECTOR, "input[class='mrNext']")
+    multi_select = driver.find_elements(By.CSS_SELECTOR, ".mrMultiple")
+    all_labels = driver.find_elements(By.CSS_SELECTOR, "label")
+    grid_question = driver.find_elements(By.CSS_SELECTOR, ".mrGridCategoryText.mrGridQuestionText")
+    slider_question = driver.find_elements(By.CLASS_NAME, "slider")

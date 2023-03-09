@@ -73,7 +73,7 @@ class Browser(Cortex, Helpers, MainScript):
         except Exception as e:
             pass
 
-    def manage_random_select(self, question_value):
+    def manage_random_select(self, question_value, question_elements):
         # display element on screen
         self.driver.execute_script('''
                 function display_select() {
@@ -120,8 +120,6 @@ class Browser(Cortex, Helpers, MainScript):
 
     def manage_cortex(self):
 
-        self.cortex_method()
-
         # Accept the conditions
         WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(
             (By.XPATH, "//a/span[contains(text(), 'Accept and take the survey')]"))).click()
@@ -132,23 +130,30 @@ class Browser(Cortex, Helpers, MainScript):
                 # getting question text
                 question_text = WebDriverWait(self.driver, 10).until(
                     EC.presence_of_element_located((By.TAG_NAME, "h3"))).text
-
                 question_value = self.find_question_excel(question_text)
+                question = self.check_question_type_cortex()
+                question_type = None
+                question_elements = None
 
-                question_type = self.check_question_type_cortex()
+                if question != None:
+                    question_type = list(question.keys())[0]
+                    question_elements = question[list(question.keys())[0]]
 
                 if question_value != False:
 
                     if question_type == "select":
 
-                        self.manage_random_select(question_value)
+                        self.manage_random_select(
+                            question_value, question_elements)
 
                         # punch according to data
                     elif question_type == "single_select":
-                        self.manage_cortex_single_select(question_value)
+                        self.manage_cortex_single_select(
+                            question_value, question_elements)
 
                     elif question_type == "text_box":
-                        self.manage_cortex_text_box(question_value)
+                        self.manage_cortex_text_box(
+                            question_value, question_elements)
 
                 else:
 
@@ -160,7 +165,8 @@ class Browser(Cortex, Helpers, MainScript):
                         # we dont have question punching randomly
                         print("we dont have question punching randomly")
 
-                        self.manage_cortex_single_select(question_value)
+                        self.manage_cortex_single_select(
+                            question_value, question_elements)
 
                         # clicking on submit
                         self.press_cortex_next()
@@ -171,7 +177,8 @@ class Browser(Cortex, Helpers, MainScript):
                     elif question_type == "text_box":
                         print("text Box question")
 
-                        self.manage_cortex_text_box(question_value)
+                        self.manage_cortex_text_box(
+                            question_value, question_elements)
 
                     elif question_type == "select":
 
@@ -180,14 +187,17 @@ class Browser(Cortex, Helpers, MainScript):
 
                         print("select block")
 
-                        self.manage_random_select(question_value)
+                        self.manage_random_select(
+                            question_value, question_elements)
 
                     elif question_type == "multi_select":
 
-                        self.manage_cortex_multi_select(question_value)
+                        self.manage_cortex_multi_select(
+                            question_value, question_elements)
 
                     elif question_type == "cortex_slider":
-                        self.manage_cortex_slider(question_value)
+                        self.manage_cortex_slider(
+                            question_value, question_elements)
 
             else:
 
@@ -212,35 +222,43 @@ class Browser(Cortex, Helpers, MainScript):
                 EC.presence_of_element_located((By.CLASS_NAME, f"mrQuestionText"))).text
 
             question_value = self.find_question_excel(question_text)
-            sleep(3)
-            question_type = self.check_question_type_main()
+            question = self.check_question_type_main()
+            question_type = None
+            question_elements = None
+
+            if question != None:
+                question_type = list(question.keys())[0]
+                question_elements = question[list(question.keys())[0]]
 
             if question_type == "single_select":
 
-                self.manage_main_single_select(question_value)
+                self.manage_main_single_select(
+                    question_value, question_elements)
 
             elif question_type == "select_tag":
 
                 try:
-                    self.manage_random_select(question_value)
+                    self.manage_random_select(
+                        question_value, question_elements)
                 except Exception as e:
                     pass
 
             elif question_type == "multi_select":
-                self.manage_main_multi(question_value)
+                self.manage_main_multi(question_value, question_elements)
 
             elif question_type == "text_box":
 
-                self.manage_main_text_box(question_value)
+                self.manage_main_text_box(question_value, question_elements)
 
             elif question_type == "grid_question":
 
-                self.manage_main_grid_question(question_text)
+                self.manage_main_grid_question(
+                    question_text, question_elements)
 
             elif question_type == "slider":
-                self.manage_main_slider(question_value)
+                self.manage_main_slider(question_value, question_elements)
 
-            elif question_type == "null":
+            elif question_type == None:
                 self.press_main_next()
             else:
                 self.press_main_next()

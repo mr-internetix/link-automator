@@ -97,3 +97,142 @@ if __name__ == "__main__":
     # print(find_question_excel(question_text))
     print(get_answer_from_excel(question_text))
     # print(generate_random_number(5))
+
+
+def check_question_type_cortex(self):
+    question_type = self.driver.execute_script('''
+
+                const checkForInputs = () => {
+                    const inputs = ["select", "radio", "text"];
+                    select_tags = document.getElementsByTagName("select");
+                    single_select = document.querySelectorAll("input.mrSingle"); // this is for web script question
+                    text_box = document.querySelectorAll("input.mrEdit"); //this for web script question
+                    cortex_radio = document.querySelectorAll(".radio");
+                    cortex_text = document.querySelectorAll(
+                        "input[type='text']");
+
+                    cortex_slider = document.querySelectorAll(
+                        ".slider-handle.max-slider-handle.round.hide")
+                    cortex_multi = document.querySelectorAll(
+                        ".multipleChoice-checkbox")
+
+                    if (cortex_slider.length > 0){
+                        return "cortex_slider"
+
+                    }
+                    else if (cortex_multi.length > 0 ){
+
+                        return "multi_select"
+                    }
+                    else if (select_tags.length > 0) {
+                        return "select"
+                    } else if (single_select.length > 0 || cortex_radio.length > 0) {
+                        return "single_select"
+                    } else if (text_box.length == 1 || cortex_text.length > 0) {
+                        return "text_box"
+                    }
+                    };
+
+                    return checkForInputs()
+
+
+        ''')
+    return question_type
+
+
+def check_question_type_main(self):
+    main_question_type = self.driver.execute_script('''
+
+            const checkForInputsInScript = () => {
+                select_tags = document.querySelectorAll("select.mrDropdown");
+                single_select = document.querySelectorAll(".mrSingle");
+                text_box = document.querySelectorAll(".mrEdit");
+                next_button = document.querySelector("input[class='mrNext']");
+                multi_select = document.querySelectorAll(".mrMultiple");
+                all_labels = document.querySelectorAll("label")
+                grid_question = document.querySelectorAll(
+                    ".mrGridCategoryText.mrGridQuestionText")
+
+                slider_question = document.getElementsByClassName("slider")
+
+                if(slider_question.length > 0 ){
+
+                    slider_mover = document.querySelector(".slider-add-arrow")
+                    if(slider_mover.classList.contains("hidden-arrow")){
+                        slider_mover.classList.remove("hidden-arrow")
+                    }
+
+                    return "slider"
+
+                }
+
+                else if(grid_question.length > 0){
+
+                    grid_question.forEach((elem)=>{
+
+                    if(elem.hasAttribute("disabled")){
+                        return "null"
+                    }
+
+                    })
+
+                    return "grid_question"
+
+                }
+                else if (single_select.length > 0) {
+
+                    single_select.forEach((elem) =>{
+                        if(elem.hasAttribute("checked")){
+                            console.log("single_already_selected")
+                            return "null"
+                        }
+                    })
+
+                    all_labels.forEach((elem) => {
+                        if(elem.classList.contains("cellCheckedBackground")){
+                            console.log("already selected")
+                            return "null"
+                        }
+                    })
+
+                    return "single_select";
+
+                } else if (text_box.length > 0) {
+
+                    text_box.forEach((elem)=>{
+
+                        if(elem.hasAttribute("disabled")){
+
+                            console.log("disabled")
+                            return "null"
+
+                        }
+                    })
+
+                    return "text_box";
+                } else if (select_tags.length > 0) {
+                    return "select_tag";
+                }else if (multi_select.length > 0){
+
+                    multi_select.forEach((elem)=>{
+
+                        if(elem.hasAttribute("disabled")){
+                            console.log("disabled")
+                            return "null"
+
+                        }
+                    })
+
+                    return "multi_select"
+                }
+                else {
+                    return "null";
+                }
+
+            };
+
+        return checkForInputsInScript()
+
+        ''')
+
+    return main_question_type

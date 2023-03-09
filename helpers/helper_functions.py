@@ -1,14 +1,14 @@
 import openpyxl
 from fuzzywuzzy import fuzz
 import random
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 
 class Helpers():
     def __init__(self):
         pass
-
-    def helper_functions():
-        print("I  am helper functions")
 
     def find_question_excel(self, question_text):
         ''' Return options of the Question if Question Exists in Excel '''
@@ -50,6 +50,16 @@ class Helpers():
         showAllOptions()
 
         ''')
+
+    def get_visible_enabled_elements(self, elements):
+
+        visible_enabled_elements = []
+
+        for element in elements:
+            if element.is_enabled() and element.is_displayed():
+                visible_enabled_elements.append(element)
+
+        return visible_enabled_elements
 
 
 if __name__ == "__main__":
