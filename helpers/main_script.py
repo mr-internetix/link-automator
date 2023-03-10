@@ -27,31 +27,36 @@ class MainScript():
         except Exception as e:
             pass
 
+    def check_already_checked_elems(self, elements):
+        try:
+            for element in elements:
+                if (element.get_attribute('checked')):
+                    return True
+
+            return None
+        except Exception as e:
+            logging.info(
+                f" some thing went wrong in check_already_elems : {e}")
+
     def manage_main_single_select(self, question_value, question_elements):
 
         try:
             # showing all options in needed
             self.showAllOptions()
 
-            # single select count
-            # all_single_select = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located(
-            #     (By.XPATH, f'//input[@type="radio"]')))
-
-            # single_select = self.get_visible_enabled_elements(
-            #     all_single_select)
-
-            # if single_select[question_value-1].is_enabled():
-            #     if question_value != False:
-            #         single_select[question_value-1].click()
-            #     else:
-            #         single_select[random.randint(
-            #             0, len(single_select)-1)].click()
-
-            question_elements[random.randint(
-                0, len(question_elements)-1)].click()
+            # check if contains_already checked elems
+            if self.check_already_checked_elems(question_elements) == None:
+                if question_value != False:
+                    print(f"{question_value}")
+                    for element in question_elements:
+                        if element.get_attribute('value') == f"__{question_value}":
+                            element.click()
+                else:
+                    question_elements[random.randint(
+                        0, len(question_elements)-1)].click()
 
         except Exception as e:
-            pass
+            logging.info(f"something went wrong and single select {e}")
         finally:
             self.press_main_next()
 
@@ -61,15 +66,16 @@ class MainScript():
             # showing all options in need
             self.showAllOptions()
 
-            all_multi = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_all_elements_located((By.CLASS_NAME, 'mrMultipleText')))
-
-            multiple_checkboxes = self.get_visible_enabled_elements(all_multi)
-
-            sleep(2)
-
-            multiple_checkboxes[random.randint(
-                0, len(multiple_checkboxes)-1)].click()
+            # checking for the question value and punch punching , random
+            if self.check_already_checked_elems(question_elements) == None:
+                if question_value != False:
+                    for element in question_elements:
+                        if element.get_attribute('value') == f"__{question_value}":
+                            element.click()
+                else:
+                    for i in range(random.randint(1, len(question_elements)-1)):
+                        question_elements[random.randint(
+                            0, len(question_elements)-1)].click()
 
         except Exception as e:
             pass
@@ -77,14 +83,34 @@ class MainScript():
         finally:
             self.press_main_next()
 
+    def manage_main_multi_other(self, question_value, question_elements):
+        try:
+
+            # showing all options in need
+            # filtered_input = question_elements.find_elements(
+            #     By.CSS_SELECTOR, '.mrMultiple')
+            # if self.check_already_checked_elems(filtered_input) == None:
+            #     if question_value != False:
+            #         pass
+
+            #     else:
+            for i in range(0, random.randint(1, len(question_elements))):
+                question_elements[random.randint(
+                    0, len(question_elements)-1)].click()
+        except Exception as e:
+            print(e)
+
+        finally:
+            self.press_main_next()
+
     def manage_main_text_box(self, question_value, question_elements):
         try:
-            all_elements = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_all_elements_located((By.XPATH, '//input[@class="mrEdit"]')))
+            # all_elements = WebDriverWait(self.driver, 10).until(
+            #     EC.presence_of_all_elements_located((By.XPATH, '//input[@class="mrEdit"]')))
 
-            text_boxes = self.get_visible_enabled_elements(all_elements)
+            # text_boxes = self.get_visible_enabled_elements(all_elements)
 
-            for textbox in text_boxes:
+            for textbox in question_elements:
                 if (question_value != False):
                     textbox.clear()
                     textbox.send_keys(str(question_value))
@@ -107,8 +133,8 @@ class MainScript():
 
     def manage_main_grid_question(self, question_value, question_elements):
         try:
-            grid_options = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located(
-                (By.CSS_SELECTOR, '.mrGridCategoryText.mrGridQuestionText')))
+            # grid_options = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located(
+            #     (By.CSS_SELECTOR, '.mrGridCategoryText.mrGridQuestionText')))
 
             total_grid_questions = WebDriverWait(self.driver, 10).until(
                 EC.presence_of_all_elements_located((By.CLASS_NAME, "prog-progress-bar-item")))
@@ -116,12 +142,12 @@ class MainScript():
             filtered_grid_question = self.get_visible_enabled_elements(
                 total_grid_questions)
 
-            filtered_grid_options = self.get_visible_enabled_elements(
-                grid_options)
+            # filtered_grid_options = self.get_visible_enabled_elements(
+            #     grid_options)
 
             for question in filtered_grid_question:
-                filtered_grid_options[random.randint(
-                    0, len(filtered_grid_options)-1)].click()
+                question_elements[random.randint(
+                    0, len(question_elements)-1)].click()
 
                 sleep(3)
         except Exception as e:
@@ -166,6 +192,7 @@ class MainScript():
             'text_box': {'selector': '.mrEdit', 'locator': By.CSS_SELECTOR},
 
             'multi_select': {'selector': '.mrMultiple', 'locator': By.CSS_SELECTOR},
+            'multi_select_other': {'selector': '.label-with-mrMultiple', 'locator': By.CSS_SELECTOR},
             # 'radio_button':{'selector':'.mrRadio','locator':By.CSS_SELECTOR},
             # 'checkbox':{'selector':'.mrCheckbox','locator':By.CSS_SELECTOR},
             # 'all_labels': {'selector': 'label', 'locator': By.TAG_NAME},

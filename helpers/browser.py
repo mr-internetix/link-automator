@@ -219,9 +219,11 @@ class Browser(Cortex, Helpers, MainScript):
         while True:
 
             question_text = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.CLASS_NAME, f"mrQuestionText"))).text
+                EC.presence_of_element_located((By.CSS_SELECTOR, "#question .mrQuestionText"))).text
 
             question_value = self.find_question_excel(question_text)
+            print(question_text)
+            print(question_value)
             question = self.check_question_type_main()
             question_type = None
             question_elements = None
@@ -245,6 +247,9 @@ class Browser(Cortex, Helpers, MainScript):
 
             elif question_type == "multi_select":
                 self.manage_main_multi(question_value, question_elements)
+
+            elif question_type == "multi_select_other":
+                self.manage_main_multi_other(question_value, question_elements)
 
             elif question_type == "text_box":
 

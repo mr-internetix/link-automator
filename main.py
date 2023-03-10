@@ -7,5 +7,4 @@ my_browser = Browser()
 
 my_browser.check_and_goto_url(Links.cortex.value)
 
-
 my_browser.manage_provider()
