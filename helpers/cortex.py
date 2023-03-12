@@ -105,7 +105,7 @@ class Cortex(Helpers):
                     textbox.send_keys(question_value)
                 else:
                     textbox.send_keys(random.generate_random_number(
-                        textbox.get_attribute("maxlength")))
+                        int(textbox.get_attribute("maxlength"))))
         except Exception as e:
             print(e)
         finally:

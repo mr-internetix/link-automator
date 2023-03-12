@@ -20,7 +20,7 @@ load_dotenv()
 # random imports for testing
 
 
-class Browser(Cortex, Helpers, MainScript):
+class Browser(Cortex, MainScript):
     '''  Contains All The methods regarding to borwser action '''
 
     def __init__(self) -> None:
@@ -31,13 +31,16 @@ class Browser(Cortex, Helpers, MainScript):
         options.add_argument("--disable-logging")
         options.add_argument("--allow-running-insecure-content")
         options.add_argument("--disable-popup-blocking")
+        options.add_argument("force-device-scale-factor=0.75")
+        options.add_argument("high-dpi-support=0.75")
 
         # This is for getting headless browser
         # options.add_argument(BrowserConfig.browser_type.value)
 
         self.driver = webdriver.Chrome(options=options)
         self.driver.maximize_window()
-
+        self.respondent_serial = ''
+        # self.driver.execute_script("document.body.style.zoom='80%'")
         # this is for custom window application
         # self.driver.set_window_size(
         #     BrowserConfig.browser_width.value, BrowserConfig.browser_height.value)
@@ -215,11 +218,13 @@ class Browser(Cortex, Helpers, MainScript):
         # Switch to main_frame
         self.switch_to_main_frame()
 
+        # getting respondent_id
+        self.respondent_serial = self.get_respondent_id()
+
         # looping through questions
         while True:
 
-            question_text = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "#question .mrQuestionText"))).text
+            question_text = self.get_question_text()
 
             question_value = self.find_question_excel(question_text)
             print(question_text)
@@ -264,7 +269,11 @@ class Browser(Cortex, Helpers, MainScript):
                 self.manage_main_slider(question_value, question_elements)
 
             elif question_type == None:
-                self.press_main_next()
+                if self.check_survey_ends() == True:
+                    print("survey Ends")
+                    break
+                else:
+                    self.press_main_next()
             else:
                 self.press_main_next()
 

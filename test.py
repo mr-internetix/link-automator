@@ -1,3 +1,4 @@
+import string
 import openpyxl
 import pandas as pd
 import random
@@ -65,6 +66,15 @@ def get_answer_from_excel(question_text):
         return row[1]
 
 
+def generate_random_string(length):
+    # Define the character set from which to generate the string
+    characters = string.ascii_letters
+
+    # Use the random module to generate a string of the desired length
+    random_string = ''.join(random.choice(characters) for i in range(length))
+
+    return random_string
+
 # def generate_random_number(n):
 #     """
 #     Generates a random n-digit number.
@@ -101,11 +111,16 @@ def get_answer_from_excel(question_text):
 
 #     ''')
 
-
 if __name__ == "__main__":
     # print(find_question_excel(question_text))
-    print(get_answer_from_excel(question_text))
-    # print(generate_random_number(5))
+    # print(get_answer_from_excel(question_text))
+    # print(generate_random_string(10))
+
+    with open('serial.txt', 'r') as f:
+        for line in f:
+            line == 'Respondent Serial: 189'
+
+            # print(generate_random_number(5))
 
 
 # def check_question_type_cortex(self):

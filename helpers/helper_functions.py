@@ -4,6 +4,7 @@ import random
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+import string
 
 
 class Helpers():
@@ -39,6 +40,16 @@ class Helpers():
         end_range = (10**n)-1   # Largest n-digit number
         return random.randint(start_range, end_range)
 
+    def generate_random_string(self, length):
+        # Define the character set from which to generate the string
+        characters = string.ascii_letters
+
+        # Use the random module to generate a string of the desired length
+        random_string = ''.join(random.choice(characters)
+                                for i in range(length))
+
+        return random_string
+
     def showAllOptions(self):
         self.driver.execute_script('''
             function showAllOptions() {
@@ -60,6 +71,61 @@ class Helpers():
                 visible_enabled_elements.append(element)
 
         return visible_enabled_elements
+
+    def get_question_text(self):
+
+        try:
+            all_text = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_all_elements_located((By.CSS_SELECTOR, "#question .mrQuestionText")))
+
+            visible_elements = []
+
+            for element in all_text:
+                if element.is_displayed():
+                    visible_elements.append(element.text)
+
+            return ' '.join(visible_elements)
+
+        except Exception as e:
+            return 'No question Found'
+
+    def get_respondent_id(self):
+
+        try:
+            respondent_serial_text = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.ID, 'current-question'))).text
+
+            respondent_serial = respondent_serial_text[0:respondent_serial_text.index(
+                '.')]
+
+            if respondent_serial:
+                # saving serial in txt
+                with open('serial.txt', 'a') as f:
+                    f.write(respondent_serial)
+
+            return respondent_serial
+        except Exception as e:
+            pass
+
+    def check_survey_ends(self):
+        try:
+            skip_submit_button = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, ".SEMBtn .vClick .SEMEmpty")))
+            skip_submit_button.click()
+
+            thanks_for_survey = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.TAG_NAME, "h1"))).text
+
+            if thanks_for_survey.lower() == 'thanks for taking this survey!':
+                with open('serial.txt', 'r') as f:
+                    for line in f:
+                        line == self.respondent_serial
+                        f.write(f"{self.respondent_serial} -- Complete")
+
+                return True
+
+        except Exception as e:
+            pass
 
 
 if __name__ == "__main__":

@@ -1,3 +1,4 @@
+from helpers.helper_functions import Helpers
 import openpyxl
 from time import sleep
 from helpers.browser_config import BrowserConfig
@@ -15,7 +16,7 @@ import pandas as pd
 load_dotenv()
 
 
-class MainScript():
+class MainScript(Helpers):
     def __init__(self):
         pass
 
@@ -105,31 +106,37 @@ class MainScript():
 
     def manage_main_text_box(self, question_value, question_elements):
         try:
-            # all_elements = WebDriverWait(self.driver, 10).until(
-            #     EC.presence_of_all_elements_located((By.XPATH, '//input[@class="mrEdit"]')))
 
-            # text_boxes = self.get_visible_enabled_elements(all_elements)
-
+            self.driver.execute_script(''' 
+                elements  = document.querySelectorAll(".mrEdit")
+                Array.from(elements).filter(element =>{
+                    element.removeAttribute("pattern")
+                })
+               
+            ''')
             for textbox in question_elements:
                 if (question_value != False):
                     textbox.clear()
                     textbox.send_keys(str(question_value))
                 else:
-                    print(type(self.generate_random_number(
-                        (textbox.get_attribute("maxlength")))))
-                    textbox.send_keys("0")
-                    # textbox.send_keys(self.generate_random_number(
-                    #     (textbox.get_attribute("maxlength"))))
+                    # random punch
+                    if textbox.get_attribute('type') == 'text':
+                        random_string = self.generate_random_string(10)
+                        textbox.send_keys(random_string)
+                    elif textbox.get_attribute('type') == 'number':
+                        random_int = self.generate_random_number(
+                            int(textbox.get_attribute("maxlength")))
+
+                        textbox.send_keys(str(random_int))
+                    else:
+                        textbox.send_keys(str(0))
         except Exception as e:
             print("Exceptions Raised in manage_main_text_box :=>", e)
         finally:
             # clicking on submit
             sleep(3)
-            try:
-                self.press_main_next()
-                self.press_main_next()
-            except Exception as e:
-                pass
+            self.press_main_next()
+            self.press_main_next()
 
     def manage_main_grid_question(self, question_value, question_elements):
         try:
