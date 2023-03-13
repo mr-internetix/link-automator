@@ -76,44 +76,6 @@ class Browser(Cortex, MainScript):
         except Exception as e:
             pass
 
-    def manage_random_select(self, question_value, question_elements):
-        # display element on screen
-        self.driver.execute_script('''
-                function display_select() {
-                            select_tags = document.getElementsByTagName(
-                                "select");
-
-                            Array.from(select_tags).forEach((element) => {
-                                element.style.display = "block";
-                            });
-                            }
-
-                          display_select()
-
-                             ''')
-
-        all_select = (WebDriverWait(self.driver, 10).until(
-            EC.presence_of_all_elements_located((By.TAG_NAME, "select"))))
-
-        for select in all_select:
-            current_select = Select(select)
-            try:
-                random_value = random.randint(
-                    7 if 13 == len(current_select.options) else 23, 30 if 15 < len(current_select.options) else len(current_select.options)-1)
-                current_select.select_by_index(random_value)
-            except Exception as e:
-                pass
-
-        # clicking on submit
-        if self.find_provider() == "cortex":
-            self.press_cortex_next()
-        else:
-            print("i am in main_script")
-            self.switch_to_main_frame()
-
-            # click on next
-            self.press_main_next()
-
     def manage_provider(self):
         ''' Checks the provider and calls the respective functions'''
         if self.find_provider() == "cortex":
@@ -146,7 +108,7 @@ class Browser(Cortex, MainScript):
 
                     if question_type == "select":
 
-                        self.manage_random_select(
+                        self.manage_select_cortex(
                             question_value, question_elements)
 
                         # punch according to data
@@ -190,8 +152,10 @@ class Browser(Cortex, MainScript):
 
                         print("select block")
 
-                        self.manage_random_select(
+                        self.manage_random_select_cortex(
                             question_value, question_elements)
+
+                        self.press_cortex_next()
 
                     elif question_type == "multi_select":
 
@@ -226,56 +190,70 @@ class Browser(Cortex, MainScript):
 
             question_text = self.get_question_text()
 
+            # show
+            self.showAllOptions()
+
             question_value = self.find_question_excel(question_text)
-            print(question_text)
-            print(question_value)
-            question = self.check_question_type_main()
-            question_type = None
-            question_elements = None
 
-            if question != None:
-                question_type = list(question.keys())[0]
-                question_elements = question[list(question.keys())[0]]
+            form_elements = self.check_question_container()
 
-            if question_type == "single_select":
+            print(form_elements)
+            for question_container in form_elements:
+                question = self.check_question_type_main(question_container)
 
-                self.manage_main_single_select(
-                    question_value, question_elements)
+                print(f"Question recieved : {question}")
 
-            elif question_type == "select_tag":
+                question_type = None
+                question_elements = None
 
-                try:
-                    self.manage_random_select(
+                if question != None:
+                    question_type = list(question.keys())[0]
+                    question_elements = question[list(question.keys())[0]]
+
+                if question_type == "single_select":
+
+                    self.manage_main_single_select(
                         question_value, question_elements)
-                except Exception as e:
-                    pass
 
-            elif question_type == "multi_select":
-                self.manage_main_multi(question_value, question_elements)
+                elif question_type == "select_tag":
 
-            elif question_type == "multi_select_other":
-                self.manage_main_multi_other(question_value, question_elements)
+                    try:
+                        self.manage_select_main(
+                            question_value, question_elements)
+                    except Exception as e:
+                        pass
 
-            elif question_type == "text_box":
+                    finally:
+                        self.press_main_next()
 
-                self.manage_main_text_box(question_value, question_elements)
+                elif question_type == "multi_select":
+                    self.manage_main_multi(question_value, question_elements)
 
-            elif question_type == "grid_question":
+                elif question_type == "multi_select_other":
+                    self.manage_main_multi_other(
+                        question_value, question_elements)
 
-                self.manage_main_grid_question(
-                    question_text, question_elements)
+                elif question_type == "text_box":
 
-            elif question_type == "slider":
-                self.manage_main_slider(question_value, question_elements)
+                    self.manage_main_text_box(
+                        question_value, question_elements)
 
-            elif question_type == None:
-                if self.check_survey_ends() == True:
-                    print("survey Ends")
-                    break
+                elif question_type == "grid_question":
+
+                    self.manage_main_grid_question(
+                        question_text, question_elements)
+
+                elif question_type == "slider":
+                    self.manage_main_slider(question_value, question_elements)
+
+                elif question_type == None:
+                    if self.check_survey_ends() == True:
+                        print("survey Ends")
+                        break
+                    else:
+                        self.press_main_next()
                 else:
                     self.press_main_next()
-            else:
-                self.press_main_next()
 
 
 if __name__ == "__main__":

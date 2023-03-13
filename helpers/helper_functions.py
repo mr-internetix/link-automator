@@ -75,16 +75,17 @@ class Helpers():
     def get_question_text(self):
 
         try:
-            all_text = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_all_elements_located((By.CSS_SELECTOR, "#question .mrQuestionText")))
+            question_text = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, ".mrQuestionText")))
 
-            visible_elements = []
+            return question_text.text
+            # visible_elements = []
 
-            for element in all_text:
-                if element.is_displayed():
-                    visible_elements.append(element.text)
+            # for element in all_text:
+            #     if element.is_displayed():
+            #         visible_elements.append(element.text)
 
-            return ' '.join(visible_elements)
+            # return ' '.join(visible_elements)
 
         except Exception as e:
             return 'No question Found'
@@ -101,7 +102,7 @@ class Helpers():
             if respondent_serial:
                 # saving serial in txt
                 with open('serial.txt', 'a') as f:
-                    f.write(respondent_serial)
+                    f.write("\n" + str(respondent_serial)+"\n")
 
             return respondent_serial
         except Exception as e:

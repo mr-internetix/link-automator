@@ -29,6 +29,43 @@ class Cortex(Helpers):
         except Exception as e:
             pass
 
+    def manage_select_cortex(self, question_value, question_elements):
+        # display element on screen
+        self.driver.execute_script('''
+                function display_select() {
+                            select_tags = document.getElementsByTagName(
+                                "select");
+
+                            Array.from(select_tags).forEach((element) => {
+                                element.style.display = "block";
+                            });
+                            }
+
+                          display_select()
+
+                             ''')
+
+        all_select = (WebDriverWait(self.driver, 10).until(
+            EC.presence_of_all_elements_located((By.TAG_NAME, "select"))))
+
+        for select in all_select:
+            current_select = Select(select)
+            try:
+                random_value = random.randint(7 if 13 == len(current_select.options) else 23, 30 if 15 < len(
+                    current_select.options) else len(current_select.options)-1)
+                current_select.select_by_index(random_value)
+            except Exception as e:
+                pass
+
+        # clicking on submit
+        if self.find_provider() == "cortex":
+            self.press_cortex_next()
+        else:
+            print("i am in main_script")
+            self.switch_to_main_frame()
+            # click on next
+            self.press_main_next()
+
     def manage_cortex_single_select(self, question_value, question_elements):
 
         try:
@@ -57,17 +94,11 @@ class Cortex(Helpers):
         try:
             # showing all options in need
             self.showAllOptions()
+            # print(f" elements in question elements { question_elements}")
 
-            sleep(3)
-            # managing multi_select
-            # multi_select_count = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located(
-            #     (By.CLASS_NAME, "multipleChoice-checkbox")))
-
-            # sleep
-            # sleep(3)
-
-            question_elements[question_value-1].click(
-            ) if question_value != False else question_elements[random.randint(0, len(question_elements)-1)].click()
+            for i in range(random.randint(1, len(question_elements)-1) // 2):
+                question_elements[question_value-1].click(
+                ) if question_value != False else question_elements[random.randint(0, len(question_elements)-1)].click()
 
         except Exception as e:
             pass
